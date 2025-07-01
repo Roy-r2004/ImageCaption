@@ -1,0 +1,50 @@
+<div style="max-width: 600px; margin: 40px auto; text-align: center; font-family: 'Segoe UI', sans-serif;">
+  <h1 style="font-size: 2rem; color: #333;">🖼️ Image Caption Generator</h1>
+  <p style="color: #666;">Upload an image and let AI describe it!</p>
+
+  <!-- Upload Input -->
+  <label for="imageUpload" style="cursor: pointer; display: inline-block; padding: 12px 20px; background-color: #007bff; color: #fff; border-radius: 8px; margin-top: 20px;">
+    Choose Image
+    <input id="imageUpload" type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+  </label>
+
+  <!-- Image Preview -->
+  <div *ngIf="previewUrl" style="margin-top: 30px;">
+    <h3 style="color: #444;">Preview</h3>
+    <img [src]="previewUrl" alt="Image Preview"
+         style="max-width: 100%; max-height: 300px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+  </div>
+
+  <!-- Upload Button -->
+  <div *ngIf="selectedFile" style="margin-top: 25px;">
+    <button (click)="uploadImage()" [disabled]="uploading"
+            style="padding: 10px 24px; font-weight: bold; border: none; border-radius: 6px; background-color: #28a745; color: #fff; cursor: pointer;">
+      {{ uploading ? 'Uploading...' : 'Generate Caption' }}
+    </button>
+  </div>
+
+  <!-- Generated Caption -->
+  <div *ngIf="caption" style="margin-top: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);">
+    <h3 style="color: #333;">📝 Caption</h3>
+    <p style="font-size: 1.1rem; font-style: italic; color: #007bff;">"{{ caption }}"</p>
+  </div>
+
+  <!-- Debug/Error -->
+  <div *ngIf="message" style="margin-top: 20px; color: red;">
+    Debug: {{ message }}
+  </div>
+
+  <!-- Caption History -->
+  <div *ngIf="history.length > 0" style="margin-top: 50px; text-align: left;">
+    <h3 style="color: #444;">📜 Caption History</h3>
+    <div *ngFor="let item of history" style="margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #ddd;">
+      <img [src]="'http://localhost:8000/uploads/' + item.filename"
+           alt="history image"
+           style="height: 100px; margin-right: 10px; border-radius: 4px; vertical-align: middle;" />
+      <span style="display: inline-block; vertical-align: middle;">
+        <strong style="color: #007bff;">"{{ item.caption }}"</strong><br />
+        <small style="color: #666;">🕒 {{ item.timestamp }}</small>
+      </span>
+    </div>
+  </div>
+</div>
