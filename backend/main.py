@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Depends
+from fastapi import FastAPI, File, UploadFile, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -11,13 +11,13 @@ from .captioning import generate_caption
 from .models import models
 from .models.database import SessionLocal, engine, Base
 
-# Create database tables
+# Create tables if not exist
 Base.metadata.create_all(bind=engine)
 
 # FastAPI app instance
 app = FastAPI()
 
-# CORS: allow frontend on localhost:4200
+# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
@@ -29,11 +29,9 @@ app.add_middleware(
 # Upload folder
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Serve static images
 app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 
-# Dependency to get DB session
+# DB session dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -46,17 +44,27 @@ def get_message():
     return {"message": "Hello from FastAPI!"}
 
 @app.post("/api/upload-image")
-async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_image(
+    file: UploadFile = File(...),
+    model: str = Form("blip"),
+    db: Session = Depends(get_db)
+):
+    print(f"🚀 Received upload: {file.filename}")
+    print(f"🧠 Requested model: {model}")
+
     try:
-        file_ext = os.path.splitext(file.filename)[1]
-        filename = f"{uuid.uuid4().hex}{file_ext}"
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
         file_path = os.path.join(UPLOAD_FOLDER, filename)
 
+        # Save image
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        caption = generate_caption(file_path)
+        # Generate caption
+        caption = generate_caption(file_path, model_name=model)
 
+        # Save to DB
         new_entry = models.ImageCaption(
             filename=filename,
             caption=caption,
@@ -68,10 +76,12 @@ async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_d
 
         return {
             "filename": filename,
-            "caption": caption
+            "caption": caption,
+            "model": model
         }
 
     except Exception as e:
+        print("❌ Error during upload:", e)
         return {"error": str(e)}
 
 @app.get("/api/history")
