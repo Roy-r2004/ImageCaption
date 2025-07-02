@@ -1,57 +1,66 @@
-<div style="max-width: 700px; margin: 40px auto; font-family: 'Segoe UI', sans-serif; padding: 20px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+<div style="max-width: 720px; margin: 50px auto; font-family: 'Segoe UI', sans-serif; padding: 30px; background: #fff; border-radius: 20px; box-shadow: 0 12px 32px rgba(0,0,0,0.1);">
 
-  <h1 style="text-align: center; font-size: 2.2rem; color: #222; margin-bottom: 10px;">🖼️ AI Image Caption Generator</h1>
-  <p style="text-align: center; color: #555; font-size: 1rem;">Upload an image and let AI describe it using BLIP or GIT</p>
+  <h1 style="text-align: center; font-size: 2.5rem; color: #222; margin-bottom: 8px;"> AI Image Caption Generator</h1>
+  <p style="text-align: center; color: #666; font-size: 1.1rem;">Generate smart image descriptions with BLIP, GIT, or BLIP-2</p>
 
   <!-- Upload + Model Selection -->
-  <div style="text-align: center; margin-top: 30px;">
-    <label for="imageUpload" style="cursor: pointer; display: inline-block; padding: 12px 24px; background-color: #007bff; color: #fff; border-radius: 8px;">
-      📤 Choose Image
+  <div style="text-align: center; margin-top: 40px;">
+    <label for="imageUpload" style="cursor: pointer; display: inline-block; padding: 14px 26px; background-color: #007bff; color: white; border-radius: 10px; font-weight: 500; transition: background 0.3s;">
+      📁 Upload Image
       <input id="imageUpload" type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
     </label>
 
-    <select [(ngModel)]="selectedModel" style="margin-left: 15px; padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem;">
-      <option value="blip">BLIP</option>
-      <option value="git">GIT</option>
+    <select [(ngModel)]="selectedModel"
+            style="margin-left: 18px; padding: 12px 16px; border-radius: 8px; font-size: 1rem; border: 1px solid #ccc; background: #f9f9f9;">
+      <option value="blip">🟦 BLIP</option>
+      <option value="git">🟪 GIT</option>
+      <option value="blip2">🟥 BLIP-2 (Prompt)</option>
     </select>
   </div>
 
-  <!-- Image Preview -->
-  <div *ngIf="previewUrl" style="margin-top: 30px; text-align: center;">
-    <img [src]="previewUrl" alt="Preview"
-         style="max-width: 100%; max-height: 350px; border-radius: 12px; box-shadow: 0 6px 25px rgba(0,0,0,0.1);" />
+  <!-- Prompt Input -->
+  <div *ngIf="selectedModel === 'blip2'" style="margin-top: 25px;">
+    <label style="font-weight: 600; display: block; margin-bottom: 8px;"> Task Prompt:</label>
+    <input [(ngModel)]="prompt" placeholder="e.g. Describe this image like a tourist guide"
+           style="width: 100%; padding: 12px 16px; border: 1px solid #ccc; border-radius: 10px; font-size: 1rem;" />
   </div>
 
-  <!-- Upload Button -->
-  <div *ngIf="selectedFile" style="text-align: center; margin-top: 25px;">
+  <!-- Image Preview -->
+  <div *ngIf="previewUrl" style="margin-top: 35px; text-align: center;">
+    <img [src]="previewUrl" alt="Preview"
+         style="max-width: 100%; max-height: 380px; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  </div>
+
+  <!-- Generate Button -->
+  <div *ngIf="selectedFile" style="text-align: center; margin-top: 30px;">
     <button (click)="uploadImage()" [disabled]="uploading"
-            style="padding: 12px 28px; font-size: 1rem; font-weight: 500; border: none; border-radius: 8px; background-color: #28a745; color: #fff; cursor: pointer;">
-      {{ uploading ? 'Generating...' : 'Generate Caption' }}
+            style="padding: 14px 32px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 10px; background-color: #28a745; color: white; cursor: pointer;">
+      {{ uploading ? 'Generating Caption...' : 'Generate Caption' }}
     </button>
   </div>
 
-  <!-- Generated Caption -->
-  <div *ngIf="caption" style="margin-top: 35px; background: #f0f8ff; padding: 24px; border-left: 5px solid #007bff; border-radius: 10px;">
-    <h3 style="margin-bottom: 10px; font-size: 1.3rem; color: #007bff;">📝 Generated Caption</h3>
-    <p style="font-size: 1.15rem; font-style: italic; color: #333;">"{{ caption }}"</p>
+  <!-- Caption Output -->
+  <div *ngIf="caption" style="margin-top: 40px; background: #eef8ff; padding: 28px; border-left: 6px solid #007bff; border-radius: 12px;">
+    <h3 style="font-size: 1.4rem; color: #007bff; margin-bottom: 10px;"> Generated Caption</h3>
+    <p style="font-size: 1.2rem; font-style: italic; color: #333;">"{{ caption }}"</p>
   </div>
 
-  <!-- Error or Message -->
+  <!-- Error Message -->
   <div *ngIf="message" style="margin-top: 20px; color: red; text-align: center;">
     ⚠️ {{ message }}
   </div>
 
   <!-- Caption History -->
   <div *ngIf="history.length > 0" style="margin-top: 50px;">
-    <h3 style="font-size: 1.5rem; color: #444; border-bottom: 2px solid #eee; padding-bottom: 10px;">📜 Caption History</h3>
+    <h3 style="font-size: 1.6rem; color: #444; border-bottom: 2px solid #e4e4e4; padding-bottom: 12px;"> Caption History</h3>
 
-    <div *ngFor="let item of history" style="display: flex; align-items: center; gap: 20px; margin-top: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+    <div *ngFor="let item of history" style="display: flex; align-items: center; gap: 20px; margin-top: 24px; padding-bottom: 18px; border-bottom: 1px solid #f0f0f0;">
       <img [src]="'http://localhost:8000/uploads/' + item.filename"
            alt="History Image"
-           style="width: 100px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" />
+           style="width: 100px; height: auto; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.05);" />
       <div>
-        <p style="margin: 0; font-weight: 600; color: #007bff;">"{{ item.caption }}"</p>
-        <small style="color: #666;">🕒 {{ item.timestamp }}</small>
+        <p style="margin: 0; font-weight: 600; font-size: 1rem; color: #007bff;">"{{ item.caption }}"</p>
+        <small style="color: #777;">🕒 {{ item.timestamp }}</small>
       </div>
     </div>
   </div>
