@@ -8,19 +8,17 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // For optional testing
   getMessage(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/message`);
   }
 
-  // Upload image and get caption
-  uploadImage(file: File): Observable<any> {
+  uploadImage(file: File, model: string): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('model', model);
     return this.http.post(`${this.BASE_URL}/upload-image`, formData);
   }
 
-  // Fetch caption history
   getHistory(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/history`);
   }
