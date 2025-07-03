@@ -2,26 +2,25 @@ from fastapi import FastAPI, File, UploadFile, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-import os
-import shutil
-import uuid
+import os, shutil, uuid
 from datetime import datetime
 
 from .captioning import generate_caption
+from .titelling import generate_title  # ✅ Import title generation
 from .models import models
 from .models.database import SessionLocal, engine, Base
 
-# =============================
-# 🚀 App & Database Setup
-# =============================
+# =========================
+# 🔧 Initial Setup
+# =========================
 
-# Create tables if not exist
+# Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# FastAPI instance
+# FastAPI app
 app = FastAPI()
 
-# Allow CORS for Angular
+# Enable CORS for Angular
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
@@ -30,11 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create upload directory
+# Upload folder setup
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Serve static files
 app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 
 # DB session dependency
@@ -45,18 +42,19 @@ def get_db():
     finally:
         db.close()
 
-# =============================
-# 🔧 API Endpoints
-# =============================
+# =========================
+# ✅ Routes
+# =========================
 
 @app.get("/api/message")
 def get_message():
     return {"message": "Hello from FastAPI!"}
 
+
 @app.post("/api/upload-image")
 async def upload_image(
     file: UploadFile = File(...),
-    model: str = Form("blip2"),
+    model: str = Form("blip"),
     prompt: str = Form("Describe the image."),
     db: Session = Depends(get_db)
 ):
@@ -64,11 +62,10 @@ async def upload_image(
     print(f"🧠 Using model: {model} with prompt: {prompt}")
 
     try:
-        # Save uploaded file
+        # Save image
         ext = os.path.splitext(file.filename)[1]
         filename = f"{uuid.uuid4().hex}{ext}"
         file_path = os.path.join(UPLOAD_FOLDER, filename)
-
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
@@ -95,6 +92,35 @@ async def upload_image(
     except Exception as e:
         print("❌ Upload error:", e)
         return {"error": str(e)}
+
+
+@app.post("/api/generate-title")
+async def generate_image_title(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    print(f"🚀 Upload received for titling: {file.filename}")
+
+    try:
+        # Save image
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Generate title (uses fixed prompt internally)
+        title = generate_title(file_path)
+
+        return {
+            "filename": filename,
+            "title": title
+        }
+
+    except Exception as e:
+        print("❌ Title generation error:", e)
+        return {"error": str(e)}
+
 
 @app.get("/api/history")
 def get_history(db: Session = Depends(get_db)):

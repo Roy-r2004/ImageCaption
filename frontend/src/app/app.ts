@@ -8,21 +8,33 @@ import { ApiService } from './api/api.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule,FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
 export class AppComponent implements OnInit {
-  message: string = '';
+  // 📦 Upload state
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   uploading: boolean = false;
-  caption: string = '';
-  history: { filename: string, caption: string, timestamp: string }[] = [];
 
-  // New state for model and prompt
-  selectedModel: string = 'blip'; // default
+  // 📄 Output
+  caption: string = '';
+  message: string = '';
+
+  // 🧠 Model + prompt + mode
+  selectedModel: string = 'blip';
   prompt: string = 'Describe the image.';
+  mode: 'caption' | 'title' = 'caption';
+   Math = Math;
+
+  // 🗂️ History data
+  history: { filename: string; caption: string; timestamp: string }[] = [];
+
+  // 🔍 Table features
+  filter: string = '';
+  pageSize: number = 5;
+  page: number = 1;
 
   constructor(private apiService: ApiService) {}
 
@@ -30,10 +42,10 @@ export class AppComponent implements OnInit {
     this.loadHistory();
   }
 
-  // Handle image selection
+  // 🖼️ Image preview
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
+    if (!input.files?.length) return;
 
     this.selectedFile = input.files[0];
 
@@ -44,45 +56,88 @@ export class AppComponent implements OnInit {
     reader.readAsDataURL(this.selectedFile);
   }
 
-  // Upload image + form data
-  uploadImage(): void {
+  // 🚀 Main upload handler
+  upload(): void {
     if (!this.selectedFile) return;
 
     this.uploading = true;
     this.caption = '';
+    this.message = '';
 
     const formData = new FormData();
     formData.append('file', this.selectedFile);
-    formData.append('model', this.selectedModel);
 
-    if (this.selectedModel === 'blip2') {
+    if (this.mode === 'caption') {
+      formData.append('model', this.selectedModel);
       formData.append('prompt', this.prompt || 'Describe the image.');
+      this.uploadCaption(formData);
+    } else {
+      this.uploadTitle(formData);
     }
+  }
 
+  // 🎯 Upload caption
+  private uploadCaption(formData: FormData): void {
     this.apiService.uploadImage(formData).subscribe({
       next: (res) => {
         this.caption = res.caption;
         this.uploading = false;
-        this.loadHistory();
+        this.loadHistory(); // update table
       },
       error: (err) => {
-        console.error('Upload failed:', err);
+        console.error('❌ Caption upload failed:', err);
         this.message = 'Upload failed. Please try again.';
         this.uploading = false;
-      }
+      },
     });
   }
 
-  // Fetch previous caption history
+  // 🎯 Upload title
+  private uploadTitle(formData: FormData): void {
+    this.apiService.generateTitle(formData).subscribe({
+      next: (res) => {
+        this.caption = res.title;
+        this.uploading = false;
+      },
+      error: (err) => {
+        console.error('❌ Title generation failed:', err);
+        this.message = 'Failed to generate title.';
+        this.uploading = false;
+      },
+    });
+  }
+
+  // 📜 Load caption history
   loadHistory(): void {
     this.apiService.getHistory().subscribe({
-      next: (res) => this.history = res,
-      error: (err) => console.error('History load failed:', err),
+      next: (res) => (this.history = res),
+      error: (err) => console.error('History fetch failed:', err),
     });
+  }
+
+  // 🔍 Filter + paginate history table
+  filteredHistory(): any[] {
+    const filtered = this.filter
+      ? this.history.filter(item =>
+          item.caption.toLowerCase().includes(this.filter.toLowerCase())
+        )
+      : this.history;
+
+    const start = (this.page - 1) * this.pageSize;
+    return filtered.slice(start, start + this.pageSize);
+  }
+
+  // 📄 Total count for pagination
+  get filteredCount(): number {
+    return this.filter
+      ? this.history.filter(item =>
+          item.caption.toLowerCase().includes(this.filter.toLowerCase())
+        ).length
+      : this.history.length;
   }
 }
 
-// Bootstrapping Angular
+// 🚀 Bootstrap Angular app
 bootstrapApplication(AppComponent, {
   providers: [provideHttpClient(), ApiService],
-}).catch(err => console.error(err));
+}).catch((err) => console.error(err));

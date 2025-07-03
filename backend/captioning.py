@@ -6,24 +6,28 @@ from transformers import (
     Blip2Processor, Blip2ForConditionalGeneration
 )
 
-# Use GPU if available
+# ======================
+# 🚀 Device Setup
+# ======================
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ======================
 # 🔧 Load Models Once
 # ======================
 
-# -------- BLIP --------
+# BLIP (base)
 print("🔧 Loading BLIP model...")
 blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to(device)
+blip_model = BlipForConditionalGeneration.from_pretrained(
+    "Salesforce/blip-image-captioning-base"
+).to(device)
 
-# -------- GIT --------
-print("🔧 Loading GIT model...")
-git_processor = GitProcessor.from_pretrained("microsoft/git-base")
-git_model = GitForCausalLM.from_pretrained("microsoft/git-base").to(device)
+# GIT (TextCaps)
+print("🔧 Loading GIT-Large TextCaps model...")
+git_processor = GitProcessor.from_pretrained("microsoft/git-large-textcaps")
+git_model = GitForCausalLM.from_pretrained("microsoft/git-large-textcaps").to(device)
 
-# -------- BLIP-2 (FLAN-T5) --------
+# BLIP-2 (FLAN-T5)
 print("🔧 Loading BLIP-2 FLAN-T5 model...")
 blip2_processor = Blip2Processor.from_pretrained("Salesforce/blip2-flan-t5-xl")
 blip2_model = Blip2ForConditionalGeneration.from_pretrained(
@@ -32,11 +36,11 @@ blip2_model = Blip2ForConditionalGeneration.from_pretrained(
 ).to(device)
 
 # ======================
-# 🧠 Individual Captioners
+# 🧠 Captioning Functions
 # ======================
 
 def generate_blip_caption(image_path: str) -> str:
-    print("🧠 Using BLIP model")
+    print("🧠 Generating with BLIP...")
     image = Image.open(image_path).convert("RGB")
     inputs = blip_processor(image, return_tensors="pt").to(device)
 
@@ -48,7 +52,7 @@ def generate_blip_caption(image_path: str) -> str:
 
 
 def generate_git_caption(image_path: str) -> str:
-    print("🧠 Using GIT model")
+    print("🧠 Generating with GIT-Large (TextCaps)...")
     image = Image.open(image_path).convert("RGB")
     inputs = git_processor(images=image, return_tensors="pt").to(device)
 
@@ -60,7 +64,7 @@ def generate_git_caption(image_path: str) -> str:
 
 
 def generate_blip2_caption(image_path: str, prompt: str = "Describe the image.") -> str:
-    print(f"🧠 Using BLIP-2 FLAN-T5 with prompt: '{prompt}'")
+    print(f"🧠 Generating with BLIP-2 FLAN-T5 | Prompt: '{prompt}'")
     image = Image.open(image_path).convert("RGB")
     inputs = blip2_processor(images=image, text=prompt, return_tensors="pt").to(device)
 
@@ -71,12 +75,12 @@ def generate_blip2_caption(image_path: str, prompt: str = "Describe the image.")
     return caption.strip()
 
 # ======================
-# 🔀 Unified Dispatcher
+# 🔀 Model Dispatcher
 # ======================
 
 def generate_caption(image_path: str, model_name: str = "blip", prompt: str = "Describe the image.") -> str:
     model_name = model_name.lower()
-    print(f"📥 Generating caption with model: {model_name}")
+    print(f"📥 Model selected: {model_name}")
 
     if model_name == "blip2":
         return generate_blip2_caption(image_path, prompt)
@@ -85,4 +89,4 @@ def generate_caption(image_path: str, model_name: str = "blip", prompt: str = "D
     elif model_name == "git":
         return generate_git_caption(image_path)
     else:
-        raise ValueError(f"❌ Unsupported model '{model_name}'. Use one of: blip, git, blip2.")
+        raise ValueError(f"❌ Unsupported model '{model_name}'. Choose from: blip, git, blip2.")
