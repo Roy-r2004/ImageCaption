@@ -26,4 +26,11 @@ export class ApiService {
   generateTitle(formData: FormData): Observable<any> {
     return this.http.post(`${this.BASE_URL}/generate-title`, formData);
   }
+
+  /**
+   * 🧠 Qwen image analysis: title, tags, desc, specs
+   */
+  analyzeWithQwen(formData: FormData): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/qwen-analyze`, formData);
+  }
 }

@@ -1,7 +1,7 @@
 <div style="max-width: 1000px; margin: 50px auto; font-family: 'Segoe UI', sans-serif; padding: 40px; background: linear-gradient(to bottom right, #ffffff, #f8fbff); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
 
   <h1 style="text-align: center; font-size: 2.7rem; font-weight: 700; color: #2a2a2a; margin-bottom: 10px;">AI Image Studio</h1>
-  <p style="text-align: center; font-size: 1.15rem; color: #666; margin-bottom: 40px;">Generate captions or titles using advanced vision-language models</p>
+  <p style="text-align: center; font-size: 1.15rem; color: #666; margin-bottom: 40px;">Generate captions, titles, or detailed product data from images</p>
 
   <!-- Mode Selection -->
   <div style="display: flex; justify-content: center; gap: 24px; margin-bottom: 30px;">
@@ -12,6 +12,10 @@
     <label style="font-weight: 600; color: #333;">
       <input type="radio" [(ngModel)]="mode" value="title" style="margin-right: 6px;" />
       Title
+    </label>
+    <label style="font-weight: 600; color: #333;">
+      <input type="radio" [(ngModel)]="mode" value="qwen" style="margin-right: 6px;" />
+      Qwen
     </label>
   </div>
 
@@ -48,16 +52,37 @@
     <button (click)="upload()" [disabled]="uploading"
             style="padding: 16px 36px; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 12px;
                    background: linear-gradient(to right, #43e97b, #38f9d7); color: white; cursor: pointer;">
-      {{ uploading ? (mode === 'caption' ? 'Generating Caption...' : 'Generating Title...') : (mode === 'caption' ? 'Generate Caption' : 'Generate Title') }}
+      {{
+        uploading
+          ? (mode === 'caption'
+              ? 'Generating Caption...'
+              : mode === 'title'
+                ? 'Generating Title...'
+                : 'Analyzing...')
+          : (mode === 'caption'
+              ? 'Generate Caption'
+              : mode === 'title'
+                ? 'Generate Title'
+                : 'Analyze with Qwen')
+      }}
     </button>
   </div>
 
-  <!-- Output -->
-  <div *ngIf="caption" style="margin-top: 30px; background: #f1f9ff; padding: 30px; border-left: 5px solid #4facfe; border-radius: 12px;">
+  <!-- Output: Caption or Title -->
+  <div *ngIf="(caption && (mode === 'caption' || mode === 'title'))" style="margin-top: 30px; background: #f1f9ff; padding: 30px; border-left: 5px solid #4facfe; border-radius: 12px;">
     <h3 style="margin-bottom: 10px; font-size: 1.4rem; font-weight: 600; color: #2a7eea;">
       {{ mode === 'caption' ? 'Generated Caption' : 'Generated Title' }}
     </h3>
     <p style="font-size: 1.2rem; color: #222; font-style: italic;">"{{ caption }}"</p>
+  </div>
+
+  <!-- Output: Qwen -->
+  <div *ngIf="mode === 'qwen' && title" style="margin-top: 30px; padding: 30px; background: #fefeff; border-left: 5px solid #38f9d7; border-radius: 12px;">
+    <h3 style="font-size: 1.5rem; color: #2a7eea; margin-bottom: 10px;">🧠 Qwen Analysis</h3>
+    <p><strong>Title:</strong> {{ title }}</p>
+    <p><strong>Tags:</strong> {{ tags }}</p>
+    <p><strong>Description:</strong> {{ desc }}</p>
+    <p><strong>Specifications:</strong> {{ specs }}</p>
   </div>
 
   <!-- Error -->

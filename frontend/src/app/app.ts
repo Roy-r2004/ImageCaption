@@ -18,15 +18,20 @@ export class AppComponent implements OnInit {
   previewUrl: string | null = null;
   uploading: boolean = false;
 
-  // 📄 Output
+  // 📄 Output (shared + Qwen)
   caption: string = '';
+  title: string = '';
+  tags: string = '';
+  desc: string = '';
+  specs: string = '';
   message: string = '';
 
   // 🧠 Model + prompt + mode
   selectedModel: string = 'blip';
   prompt: string = 'Describe the image.';
-  mode: 'caption' | 'title' = 'caption';
-   Math = Math;
+  mode: 'caption' | 'title' | 'qwen' = 'caption';
+
+  Math = Math;
 
   // 🗂️ History data
   history: { filename: string; caption: string; timestamp: string }[] = [];
@@ -61,19 +66,36 @@ export class AppComponent implements OnInit {
     if (!this.selectedFile) return;
 
     this.uploading = true;
-    this.caption = '';
-    this.message = '';
+    this.resetOutputs();
 
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    if (this.mode === 'caption') {
-      formData.append('model', this.selectedModel);
-      formData.append('prompt', this.prompt || 'Describe the image.');
-      this.uploadCaption(formData);
-    } else {
-      this.uploadTitle(formData);
+    switch (this.mode) {
+      case 'caption':
+        formData.append('model', this.selectedModel);
+        formData.append('prompt', this.prompt || 'Describe the image.');
+        this.uploadCaption(formData);
+        break;
+
+      case 'title':
+        this.uploadTitle(formData);
+        break;
+
+      case 'qwen':
+        this.uploadQwen(formData);
+        break;
     }
+  }
+
+  // 🧹 Clear output fields
+  private resetOutputs(): void {
+    this.caption = '';
+    this.title = '';
+    this.tags = '';
+    this.desc = '';
+    this.specs = '';
+    this.message = '';
   }
 
   // 🎯 Upload caption
@@ -102,6 +124,24 @@ export class AppComponent implements OnInit {
       error: (err) => {
         console.error('❌ Title generation failed:', err);
         this.message = 'Failed to generate title.';
+        this.uploading = false;
+      },
+    });
+  }
+
+  // 🌟 Upload for Qwen (title + tags + desc + specs)
+  private uploadQwen(formData: FormData): void {
+    this.apiService.analyzeWithQwen(formData).subscribe({
+      next: (res) => {
+        this.title = res.title;
+        this.tags = res.tags;
+        this.desc = res.desc;
+        this.specs = res.specs;
+        this.uploading = false;
+      },
+      error: (err) => {
+        console.error('❌ Qwen analysis failed:', err);
+        this.message = 'Qwen analysis failed. Please try again.';
         this.uploading = false;
       },
     });
