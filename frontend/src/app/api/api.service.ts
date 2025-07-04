@@ -12,10 +12,10 @@ export class ApiService {
     return this.http.get(`${this.BASE_URL}/message`);
   }
 
-  uploadImage(file: File, model: string): Observable<any> {
+  uploadImage(file: File, product: string): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('model', model);
+    formData.append('product', product); // Use 'product' instead of 'model'
     return this.http.post(`${this.BASE_URL}/upload-image`, formData);
   }
 

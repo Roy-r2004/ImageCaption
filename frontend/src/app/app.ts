@@ -18,7 +18,7 @@ export class AppComponent implements OnInit {
   previewUrl: string | null = null;
   uploading: boolean = false;
   caption: string = '';
-  selectedModel: string = 'blip';
+  product: string = '';
   history: { filename: string; caption: string; timestamp: string }[] = [];
 
   constructor(private apiService: ApiService) {}
@@ -46,7 +46,7 @@ export class AppComponent implements OnInit {
     this.uploading = true;
     this.caption = '';
 
-    this.apiService.uploadImage(this.selectedFile, this.selectedModel).subscribe({
+    this.apiService.uploadImage(this.selectedFile, this.product).subscribe({
       next: (res) => {
         this.caption = res.caption;
         this.uploading = false;

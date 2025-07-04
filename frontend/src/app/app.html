@@ -3,23 +3,28 @@
   <h1 style="text-align: center; font-size: 2.2rem; color: #222; margin-bottom: 10px;">🖼️ AI Image Caption Generator</h1>
   <p style="text-align: center; color: #555; font-size: 1rem;">Upload an image and let AI describe it using BLIP or GIT</p>
 
-  <!-- Upload + Model Selection -->
+  
   <div style="text-align: center; margin-top: 30px;">
     <label for="imageUpload" style="cursor: pointer; display: inline-block; padding: 12px 24px; background-color: #007bff; color: #fff; border-radius: 8px;">
       📤 Choose Image
       <input id="imageUpload" type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
     </label>
 
-    <select [(ngModel)]="selectedModel" style="margin-left: 15px; padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem;">
+  <!--<select [(ngModel)]="selectedModel" style="margin-left: 15px; padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem;">
       <option value="blip">BLIP</option>
       <option value="git">GIT</option>
     </select>
-  </div>
+  </div> -->
 
   <!-- Image Preview -->
   <div *ngIf="previewUrl" style="margin-top: 30px; text-align: center;">
     <img [src]="previewUrl" alt="Preview"
          style="max-width: 100%; max-height: 350px; border-radius: 12px; box-shadow: 0 6px 25px rgba(0,0,0,0.1);" />
+  </div>
+
+  <!-- Product Input (only show if file is selected) -->
+  <div *ngIf="selectedFile" style="text-align: center; margin-top: 20px;">
+    <input [(ngModel)]="product" placeholder="Enter product keyword" style="padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; width: 60%;" />
   </div>
 
   <!-- Upload Button -->
@@ -55,4 +60,5 @@
       </div>
     </div>
   </div>
+
 </div>
